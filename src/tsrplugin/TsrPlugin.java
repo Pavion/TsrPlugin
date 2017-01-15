@@ -8,7 +8,6 @@ import devplugin.*;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -28,7 +27,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 /**
- *
+ * Main class for this plugin
  * @author Pavion
  */
 public class TsrPlugin extends devplugin.Plugin {
@@ -92,9 +91,8 @@ public class TsrPlugin extends devplugin.Plugin {
     public ActionMenu getContextMenuActions(Program program) {        
         AbstractAction action = new AbstractAction() {
             
+            @Override
             public void actionPerformed(ActionEvent evt) {
-                
-                //Program pro = (Program) evt; //getProgramFromContextMenuActionEvent(evt);
                 sendAnTSR(program);
             }
         };
@@ -111,42 +109,25 @@ public class TsrPlugin extends devplugin.Plugin {
         return new ActionMenu(action); 
     }
 
-
     protected void sendAnTSR(Program program) {
         try {                
             String url = mSettings.getProperty("URL") + "/createtvb";
-            //String url = "http://localhost:8030/createtvb";
-            String USER_AGENT = "Mozilla/5.0";
-
-            
             
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             
-            //add request header
             con.setRequestMethod("POST");
-            //con.setRequestProperty("User-Agent", USER_AGENT);
-            //con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
             
-            String recname="", sender="", von="", bis="", am="";
-            recname = program.getTitle();
-            sender = program.getChannel().getName();            
-            von = program.getTimeString();
-            bis = program.getEndTimeString();
+            String recname = program.getTitle();
+            String sender = program.getChannel().getName();            
+            String von = program.getTimeString();
+            String bis = program.getEndTimeString();
             
-            //java.util.Date dAm = 
             Calendar cal = program.getDate().getCalendar();
-            //cal.setTime(dAm);
-            
-            am = new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
+            String am = new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
             
             String urlParameters = String.format("recname=%s&sender=%s&von=%s&bis=%s&am=%s", recname, sender, von, bis, am);
             
-            PrintWriter out = new PrintWriter("d:/filename.txt");
-            out.println(recname);
-            out.close();
-
-
             // Send post request
             con.setDoOutput(true);
             DataOutputStream wr = new DataOutputStream(con.getOutputStream());
@@ -169,7 +150,6 @@ public class TsrPlugin extends devplugin.Plugin {
             }
             in.close();
             
-            //print result
             //System.out.println(response.toString());
         } catch (MalformedURLException ex) {
             Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
@@ -178,9 +158,6 @@ public class TsrPlugin extends devplugin.Plugin {
         } catch (IOException ex) {
             Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-
-        
         
     }
 }

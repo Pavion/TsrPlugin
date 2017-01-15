@@ -6,8 +6,8 @@
 package tsrplugin;
 
 /**
- *
- * @author Pav
+ * Configuration panel for TV-Browser
+ * @author Pavion
  */
 public class Config extends javax.swing.JPanel {
 
