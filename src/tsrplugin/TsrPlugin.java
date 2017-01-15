@@ -10,13 +10,13 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -34,6 +34,26 @@ public class TsrPlugin extends devplugin.Plugin {
     private Properties mSettings;
     private Config ret; 
 
+    private static final util.ui.Localizer mLocalizer
+                    = util.ui.Localizer.getLocalizerFor( TsrPlugin.class );
+    
+    Locale[] supportedLocales = {
+        Locale.GERMAN,
+        Locale.ENGLISH
+    };
+
+    private static TsrPlugin mInstance;
+    public TsrPlugin() {
+        mInstance = this;    
+    }
+    
+    protected static TsrPlugin getInstance() {
+        if (mInstance == null) {
+            mInstance = new TsrPlugin();
+        }
+        return mInstance;
+    }
+    
     @Override
     public Properties storeSettings() {
         return mSettings;
@@ -45,12 +65,15 @@ public class TsrPlugin extends devplugin.Plugin {
     }
 
     public static Version getVersion() {        
-        return new Version(1,0);
+        return new Version(1,1,0,true);
     }
     
     @Override
-    public PluginInfo getInfo() {
-        return new PluginInfo(TsrPlugin.class, "TsrPlugin", "Remote control for tvstreamrecord, a Synology recording package", 
+    public PluginInfo getInfo() {        
+        String name = mLocalizer.msg( "pluginName" ,"TsrPlugin" );
+        String desc = mLocalizer.msg( "pluginDesc" ,"Remote control for tvstreamrecord, a Synology recording package" );
+
+        return new PluginInfo(TsrPlugin.class, name, desc, 
                 "Pavion", "GPL", "http://pavion.github.io/tvstreamrecord/");
     }
     
@@ -61,7 +84,9 @@ public class TsrPlugin extends devplugin.Plugin {
             @Override
             public JPanel createSettingsPanel() {                
                 ret = new Config();
+                String urlMessage = mLocalizer.msg( "urlMessage" ,"TVStreamRecord URL and Port (e.g. http://0.0.0.0:8030)" );
                 String url = mSettings.getProperty("URL");
+                ret.setLabel(urlMessage);
                 ret.setURL(url);
                 return ret;
             }
@@ -98,7 +123,8 @@ public class TsrPlugin extends devplugin.Plugin {
         };
 
         // Der Aktion einen Namen geben. Dieser Name wird dann im Kontextmenü gezeigt
-        action.putValue(Action.NAME, "Mit TvStreamRecord aufnehmen");
+        String rec = mLocalizer.msg("popupCaption","Capture with TvStreamRecord");
+        action.putValue(Action.NAME, rec);        
 
         // Der Aktion ein Icon geben. Dieses Icon wird mit dem Namen im Kontextmenü gezeigt
         // Das Icon sollte 16x16 Pixel groß sein
