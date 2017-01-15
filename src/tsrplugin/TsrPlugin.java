@@ -100,7 +100,7 @@ public class TsrPlugin extends devplugin.Plugin {
         };
 
         // Der Aktion einen Namen geben. Dieser Name wird dann im Kontextmenü gezeigt
-        action.putValue(Action.NAME, "An tvstreamrecord senden");
+        action.putValue(Action.NAME, "Mit TvStreamRecord aufnehmen");
 
         // Der Aktion ein Icon geben. Dieses Icon wird mit dem Namen im Kontextmenü gezeigt
         // Das Icon sollte 16x16 Pixel groß sein
