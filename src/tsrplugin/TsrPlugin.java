@@ -5,6 +5,7 @@
  */
 package tsrplugin;
 import devplugin.*;
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -13,6 +14,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -113,6 +116,41 @@ public class TsrPlugin extends devplugin.Plugin {
     }
     
     @Override
+    public ActionMenu getButtonAction() {
+        AbstractAction action = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent evt) {
+                if(Desktop.isDesktopSupported())
+                {
+                    try {
+                        Desktop.getDesktop().browse(new URI(mSettings.getProperty("URL")));
+                    } catch (IOException ex) {
+                        Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (URISyntaxException ex) {
+                        Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        };
+
+        String name = mLocalizer.msg("menuOpen","Open TvStreamRecord");
+        action.putValue(Action.NAME, name);        
+
+        // Der Aktion ein kleines Icon geben. Dieses Icon wird im Menü gezeigt
+        // Das Icon sollte 16x16 Pixel groß sein
+        ImageIcon icon = createImageIcon("img/tvstreamrecord.png");
+        action.putValue(Action.SMALL_ICON, icon);
+
+        // Der Aktion ein großes Icon geben. Dieses Icon wird in der Symbolleiste gezeigt
+        // Das Icon sollte 22x22 Pixel groß sein
+        icon = createImageIcon("img/tvstreamrecord22.png");
+        action.putValue(BIG_ICON, icon);
+
+        // Das Aktions-Menü erzeugen und zurückgeben
+        return new ActionMenu(action); 
+    }
+    
+    @Override
     public ActionMenu getContextMenuActions(Program program) {        
         AbstractAction action = new AbstractAction() {
             
@@ -123,8 +161,8 @@ public class TsrPlugin extends devplugin.Plugin {
         };
 
         // Der Aktion einen Namen geben. Dieser Name wird dann im Kontextmenü gezeigt
-        String rec = mLocalizer.msg("popupCaption","Capture with TvStreamRecord");
-        action.putValue(Action.NAME, rec);        
+        String name = mLocalizer.msg("popupCaption","Capture with TvStreamRecord");
+        action.putValue(Action.NAME, name);        
 
         // Der Aktion ein Icon geben. Dieses Icon wird mit dem Namen im Kontextmenü gezeigt
         // Das Icon sollte 16x16 Pixel groß sein
