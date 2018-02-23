@@ -214,6 +214,9 @@ public class TsrPlugin extends devplugin.Plugin {
             }
             in.close();
             
+            program.mark(this);
+            program.validateMarking();
+            
             //System.out.println(response.toString());
         } catch (MalformedURLException ex) {
             Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
@@ -223,5 +226,10 @@ public class TsrPlugin extends devplugin.Plugin {
             Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+    }
+    
+    @Override
+    public int getMarkPriorityForProgram(Program p) {
+        return Program.MEDIUM_MARK_PRIORITY;
     }
 }
