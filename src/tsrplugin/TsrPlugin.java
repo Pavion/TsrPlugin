@@ -175,7 +175,6 @@ public class TsrPlugin extends devplugin.Plugin {
     }
 
     protected void sendAnTSR(Program program) {
-        PluginTreeNode rootNode = getRootNode();
         try {                
             String url = mSettings.getProperty("URL") + "/createtvb";
             
@@ -214,10 +213,7 @@ public class TsrPlugin extends devplugin.Plugin {
             }
             in.close();
             if (response.toString().contains("true")) {
-                program.mark(this);
-                program.validateMarking();
-                rootNode.addProgram(program);
-                rootNode.update();
+                getTsrList();
             } else {
                 String msg = mLocalizer.msg( "channelError" ,"Channel '{}' could not be found in tvstreamrecord" ).replace("{}", sender);
                 JOptionPane.showMessageDialog(this.getParentFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
@@ -238,7 +234,9 @@ public class TsrPlugin extends devplugin.Plugin {
     
     protected void getTsrList() {
         PluginTreeNode rootNode = getRootNode();
-
+        rootNode.removeAllActions();
+        rootNode.removeAllChildren();
+  
         try {
             String url = mSettings.getProperty("URL") + "/gettvb";
 
