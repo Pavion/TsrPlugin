@@ -232,4 +232,10 @@ public class TsrPlugin extends devplugin.Plugin {
     public int getMarkPriorityForProgram(Program p) {
         return Program.MEDIUM_MARK_PRIORITY;
     }
+    
+    @Override
+    public ThemeIcon getMarkIconFromTheme() {
+        return new ThemeIcon("actions", "media-playback-start", 16);
+    }
+
 }
