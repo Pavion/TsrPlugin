@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 /**
  * Main class for this plugin
@@ -68,7 +69,7 @@ public class TsrPlugin extends devplugin.Plugin {
     }
 
     public static Version getVersion() {        
-        return new Version(1,1,0,true);
+        return new Version(1,2,0,true);
     }
     
     @Override
@@ -174,6 +175,7 @@ public class TsrPlugin extends devplugin.Plugin {
     }
 
     protected void sendAnTSR(Program program) {
+        PluginTreeNode rootNode = getRootNode();
         try {                
             String url = mSettings.getProperty("URL") + "/createtvb";
             
@@ -186,11 +188,12 @@ public class TsrPlugin extends devplugin.Plugin {
             String sender = program.getChannel().getName();            
             String von = program.getTimeString();
             String bis = program.getEndTimeString();
+            String uniqueid = program.getUniqueID();
             
             Calendar cal = program.getDate().getCalendar();
             String am = new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
             
-            String urlParameters = String.format("recname=%s&sender=%s&von=%s&bis=%s&am=%s", recname, sender, von, bis, am);
+            String urlParameters = String.format("recname=%s&sender=%s&von=%s&bis=%s&am=%s&uniqueid=%s", recname, sender, von, bis, am, uniqueid);
             
             // Send post request
             con.setDoOutput(true);
@@ -200,9 +203,6 @@ public class TsrPlugin extends devplugin.Plugin {
             wr.close();
             
             int responseCode = con.getResponseCode();
-            //System.out.println("\nSending 'POST' request to URL : " + url);
-            //System.out.println("Post parameters : " + urlParameters);
-            //System.out.println("Response Code : " + responseCode);
             
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(con.getInputStream()));
@@ -213,11 +213,57 @@ public class TsrPlugin extends devplugin.Plugin {
                 response.append(inputLine);
             }
             in.close();
-            
-            program.mark(this);
-            program.validateMarking();
+            if (response.toString().contains("true")) {
+                program.mark(this);
+                program.validateMarking();
+                rootNode.addProgram(program);
+                rootNode.update();
+            } else {
+                String msg = mLocalizer.msg( "channelError" ,"Channel '{}' could not be found in tvstreamrecord" ).replace("{}", sender);
+                JOptionPane.showMessageDialog(this.getParentFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+            }
             
             //System.out.println(response.toString());
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ProtocolException ex) {
+            Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            String msg = mLocalizer.msg( "connectionError", "tvstreamrecord is not responding, please check your settings" );
+            JOptionPane.showMessageDialog(this.getParentFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+            Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
+    protected void getTsrList() {
+        PluginTreeNode rootNode = getRootNode();
+
+        try {
+            String url = mSettings.getProperty("URL") + "/gettvb";
+
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+            con.setRequestMethod("GET");
+         
+            int responseCode = con.getResponseCode();
+
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()));
+            String inputLine;
+                    
+            while ((inputLine = in.readLine()) != null) {
+                Program program = getPluginManager().getProgram(inputLine);
+                if (program != null) {
+                    program.mark(this);
+                    program.validateMarking();
+                    rootNode.addProgram(program);
+                }
+            }
+            in.close();
+            rootNode.update();
+            
         } catch (MalformedURLException ex) {
             Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ProtocolException ex) {
@@ -229,13 +275,19 @@ public class TsrPlugin extends devplugin.Plugin {
     }
     
     @Override
-    public int getMarkPriorityForProgram(Program p) {
-        return Program.MEDIUM_MARK_PRIORITY;
+    public void handleTvBrowserStartFinished() {
+        getTsrList();
     }
-    
+ 
     @Override
-    public ThemeIcon getMarkIconFromTheme() {
-        return new ThemeIcon("actions", "media-playback-start", 16);
+    public Icon[] getMarkIconsForProgram(Program p) {
+        return new Icon[] {createImageIcon("img/tvstreamrecord.png")};
+    }
+ 
+        
+    @Override
+    public boolean canUseProgramTree() {
+        return true;
     }
 
 }
