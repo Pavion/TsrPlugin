@@ -150,58 +150,103 @@ public class TsrPlugin extends devplugin.Plugin {
         // Das Aktions-Menü erzeugen und zurückgeben
         return new ActionMenu(action); 
     }
-    
+
     @Override
     public ActionMenu getContextMenuActions(Program program) {        
-        AbstractAction action = new AbstractAction() {
-            
-            @Override
-            public void actionPerformed(ActionEvent evt) {
-                sendAnTSR(program);
+ 
+        PluginTreeNode rootNode = getRootNode();
+        boolean found = false;
+        for (Program p: rootNode.getPrograms()) {
+            if (p.equals(program)) {
+                found = true;
+                break;
             }
-        };
+        }
+        AbstractAction action = null; 
+        
+        if (found) {
+            action = new AbstractAction() {
+            
+                @Override
+                public void actionPerformed(ActionEvent evt) {
+                    deleteFromTSR(program);
+                }
+            };
 
-        // Der Aktion einen Namen geben. Dieser Name wird dann im Kontextmenü gezeigt
-        String name = mLocalizer.msg("popupCaption","Capture with TvStreamRecord");
-        action.putValue(Action.NAME, name);        
+            String name = mLocalizer.msg("popupCaptionStop","Cancel capture with TvStreamRecord");
+            action.putValue(Action.NAME, name);        
+            
+        } else {
+            action = new AbstractAction() {
+            
+                @Override
+                public void actionPerformed(ActionEvent evt) {
+                    sendAnTSR(program);
+                }
+            };
 
-        // Der Aktion ein Icon geben. Dieses Icon wird mit dem Namen im Kontextmenü gezeigt
-        // Das Icon sollte 16x16 Pixel groß sein
+            String name = mLocalizer.msg("popupCaptionStart","Capture with TvStreamRecord");
+            action.putValue(Action.NAME, name);        
+
+        }
+
         ImageIcon icon = createImageIcon("img/tvstreamrecord.png");
         action.putValue(Action.SMALL_ICON, icon);
 
-        // Das Aktions-Menü erzeugen und zurückgeben
         return new ActionMenu(action); 
     }
 
     protected void sendAnTSR(Program program) {
-        try {                
-            String url = mSettings.getProperty("URL") + "/createtvb";
+        String url = mSettings.getProperty("URL") + "/createtvb";
             
+        String recname = program.getTitle();
+        String sender = program.getChannel().getName();            
+        String von = program.getTimeString();
+        String bis = program.getEndTimeString();
+        String uniqueid = program.getUniqueID();
+            
+        Calendar cal = program.getDate().getCalendar();
+        String am = new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
+            
+        String urlParameters = String.format("recname=%s&sender=%s&von=%s&bis=%s&am=%s&uniqueid=%s", recname, sender, von, bis, am, uniqueid);
+            
+        String response = connectTsr(url, urlParameters);
+
+        if (response.contains("true")) {
+            getTsrList();
+        } else {
+            String msg = mLocalizer.msg( "channelError" ,"Channel '{}' could not be found in tvstreamrecord" ).replace("{}", sender);
+            JOptionPane.showMessageDialog(this.getParentFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    protected void deleteFromTSR(Program program) {
+        String url = mSettings.getProperty("URL") + "/deletetvb";
+        String urlParameters = String.format("uniqueid=%s", program.getUniqueID());
+        String response = connectTsr(url, urlParameters);
+
+        if (response.contains("true")) {
+            program.unmark(this);                
+            getTsrList();
+        } else {
+            String msg = mLocalizer.msg( "deleteError" ,"Event '{}' could not be stopped" ).replace("{}", program.getTitle());
+            JOptionPane.showMessageDialog(this.getParentFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
+    }
+    
+    protected String connectTsr(String url, String urlParameters) {
+        try {                
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             
             con.setRequestMethod("POST");
             
-            String recname = program.getTitle();
-            String sender = program.getChannel().getName();            
-            String von = program.getTimeString();
-            String bis = program.getEndTimeString();
-            String uniqueid = program.getUniqueID();
-            
-            Calendar cal = program.getDate().getCalendar();
-            String am = new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
-            
-            String urlParameters = String.format("recname=%s&sender=%s&von=%s&bis=%s&am=%s&uniqueid=%s", recname, sender, von, bis, am, uniqueid);
-            
-            // Send post request
             con.setDoOutput(true);
             DataOutputStream wr = new DataOutputStream(con.getOutputStream());
             wr.write(urlParameters.getBytes("UTF-8"));
             wr.flush();
             wr.close();
-            
-            int responseCode = con.getResponseCode();
             
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(con.getInputStream()));
@@ -212,16 +257,8 @@ public class TsrPlugin extends devplugin.Plugin {
                 response.append(inputLine);
             }
             in.close();
-            if (response.toString().contains("true")) {
-                getTsrList();
-            } else {
-                String msg = mLocalizer.msg( "channelError" ,"Channel '{}' could not be found in tvstreamrecord" ).replace("{}", sender);
-                JOptionPane.showMessageDialog(this.getParentFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            return response.toString();
             
-            //System.out.println(response.toString());
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ProtocolException ex) {
             Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -229,9 +266,9 @@ public class TsrPlugin extends devplugin.Plugin {
             JOptionPane.showMessageDialog(this.getParentFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(TsrPlugin.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+        return "false";        
     }
-    
+        
     protected void getTsrList() {
         PluginTreeNode rootNode = getRootNode();
         rootNode.removeAllActions();
@@ -271,18 +308,17 @@ public class TsrPlugin extends devplugin.Plugin {
         }
         
     }
-    
+
     @Override
     public void handleTvBrowserStartFinished() {
         getTsrList();
     }
- 
+
     @Override
     public Icon[] getMarkIconsForProgram(Program p) {
         return new Icon[] {createImageIcon("img/tvstreamrecord.png")};
     }
- 
-        
+
     @Override
     public boolean canUseProgramTree() {
         return true;
