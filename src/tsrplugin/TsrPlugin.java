@@ -200,6 +200,11 @@ public class TsrPlugin extends devplugin.Plugin {
         String url = mSettings.getProperty("URL") + "/createtvb";
             
         String recname = program.getTitle();
+        String episode = program.getTextField(ProgramFieldType.EPISODE_TYPE);
+        if (episode != null) {
+            recname += " - " + episode;
+        }
+            
         String sender = program.getChannel().getName();            
         String von = program.getTimeString();
         String bis = program.getEndTimeString();
