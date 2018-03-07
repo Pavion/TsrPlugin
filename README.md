@@ -1,6 +1,6 @@
 # TsrPlugin
 
-**tvstreamrecord** plugin for TV-Browser
+[**tvstreamrecord**](https://pavion.github.io/tvstreamrecord/) plugin for [**TV-Browser**](http://www.tvbrowser.org/)
 
 # Features
 
@@ -12,4 +12,4 @@ Please use the official plugin distribution from TV-Browser. If you want to inst
 
 # Configuration
 
-After the installation of this plugin you must open your TV-Browser, open 'Tools' menu and select 'Manage plugins'. You should now see this plugin (TsrPlugin) in the list. Select it and enter the full URL of your **tvstreamrecord** including port (e.g. http://0.0.0.0:8030) without backslash.
+After the installation of this plugin you must open your TV-Browser, open 'Tools' menu and select 'Manage plugins'. You should now see this plugin (TsrPlugin) in the list. Select it and enter the full URL of your **tvstreamrecord** including port (e.g. `http://192.168.1.2:8030`) without backslash.
