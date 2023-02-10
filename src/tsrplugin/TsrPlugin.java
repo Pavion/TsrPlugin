@@ -71,7 +71,7 @@ public class TsrPlugin extends devplugin.Plugin {
     }
 
     public static Version getVersion() {
-        return new Version(1,3,1,true);
+        return new Version(1,3,2,true);
     }
 
     @Override
