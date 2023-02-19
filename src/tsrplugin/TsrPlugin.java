@@ -235,14 +235,15 @@ public class TsrPlugin extends devplugin.Plugin {
         String urlParameters = String.format("uniqueid=%s", program.getUniqueID());
         String response = connectTsr(url, urlParameters);
 
-        if (response.contains("true")) {
-            program.unmark(this);
-            getTsrList();
-        } else {
-            String msg = mLocalizer.msg( "deleteError" ,"Event '{}' could not be stopped" ).replace("{}", program.getTitle());
-            JOptionPane.showMessageDialog(this.getParentFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+        if (response.contains("false")) {
+            String msg = mLocalizer.msg( "deleteError" ,"Event '{}' could not be stopped in tvstreamrecord, should it be removed anyway?" ).replace("{}", program.getTitle());
+            String title = mLocalizer.msg( "deleteErrorTitle" ,"Event not found" );
+            if (JOptionPane.showConfirmDialog(this.getParentFrame(), msg, title, JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+                return;
+            }
         }
-
+        program.unmark(this);
+        getTsrList();
     }
 
     protected String connectTsr(String url, String urlParameters) {
